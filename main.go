@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+type testError struct{}
+
 func readInput(reader *bufio.Reader) (string, error) {
 
 	delimiter := byte('\n')
@@ -28,7 +30,13 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	for {
+	task := func() {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				fmt.Println(recovered)
+			}
+		}()
+
 		fmt.Print("db > ")
 		text, err := readInput(reader)
 
@@ -38,11 +46,15 @@ func main() {
 		}
 
 		if IsMetaCommand(text) {
-			result := HandleMetaCommand(MetaCommand(text))
-			if result == MetaCommandResultUnknwon {
-				fmt.Printf("Unrecognized Command: %s\n", text)
+			if err := HandleMetaCommand(MetaCommand(text)); err != nil {
+				panic(err)
+			} else {
+				return
 			}
-			continue
 		}
+	}
+
+	for {
+		task()
 	}
 }

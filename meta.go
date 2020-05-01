@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -13,30 +14,36 @@ const (
 	MetaCommandExit MetaCommand = ".exit"
 )
 
-// MetaCommandResultCode type.
-type MetaCommandResultCode int
+// MetaCommandUnknownError type.
+type MetaCommandUnknownError struct {
+	command MetaCommand
+}
 
-const (
-	// MetaCommandResultSuccess indicates that the meta command was successfully executed.
-	MetaCommandResultSuccess MetaCommandResultCode = iota
-	// MetaCommandResultUnknwon indicates that the meta command was unkown.
-	MetaCommandResultUnknwon
-)
+func (err *MetaCommandUnknownError) Error() string {
+	return fmt.Sprintf("Unkown meta command: '%v'", err.command)
+}
+
+// NewUnknownMetaCommandError constructs a new unknown meta command error.
+func NewUnknownMetaCommandError(command MetaCommand) *MetaCommandUnknownError {
+	return &MetaCommandUnknownError{
+		command: command,
+	}
+}
 
 // IsMetaCommand returns true if the given strings starts with a '.'
 func IsMetaCommand(text string) bool {
 	return strings.HasPrefix(text, ".")
 }
 
-// HandleMetaCommand executes known commands. Returns a MetaCommandResultCode.
-func HandleMetaCommand(command MetaCommand) (result MetaCommandResultCode) {
+// HandleMetaCommand executes known commands.
+// Returns an error if command could not be handled.
+func HandleMetaCommand(command MetaCommand) (err error) {
 
 	switch command {
 	case MetaCommandExit:
 		os.Exit(int(ExitSuccess))
 	default:
-		result = MetaCommandResultUnknwon
+		err = NewUnknownMetaCommandError(command)
 	}
-
-	return
+	return err
 }
