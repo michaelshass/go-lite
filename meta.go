@@ -20,7 +20,7 @@ type MetaCommandUnknownError struct {
 }
 
 func (err *MetaCommandUnknownError) Error() string {
-	return fmt.Sprintf("Unkown meta command: '%v'", err.command)
+	return fmt.Sprintf("Unkown meta command: '%s'", string(err.command))
 }
 
 // NewUnknownMetaCommandError constructs a new unknown meta command error.
@@ -35,9 +35,9 @@ func IsMetaCommand(text string) bool {
 	return strings.HasPrefix(text, ".")
 }
 
-// HandleMetaCommand executes known commands.
+// ExecuteMetaCommand executes known commands.
 // Returns an error if command could not be handled.
-func HandleMetaCommand(command MetaCommand) (err error) {
+func ExecuteMetaCommand(command MetaCommand) (err error) {
 
 	switch command {
 	case MetaCommandExit:

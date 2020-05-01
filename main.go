@@ -3,19 +3,22 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
 
-type testError struct{}
+const (
+	linePrefix string = "db > "
+	delimiter  byte   = '\n'
+)
 
-func readInput(reader *bufio.Reader) (string, error) {
+func readInput(reader *bufio.Reader) (text string, err error) {
 
-	delimiter := byte('\n')
-	text, err := reader.ReadString(delimiter)
+	text, err = reader.ReadString(delimiter)
 
 	if err != nil {
-		return text, err
+		return
 	}
 
 	// Clean string before evaluation
@@ -23,38 +26,49 @@ func readInput(reader *bufio.Reader) (string, error) {
 		text = text[:index]
 	}
 
-	return text, nil
+	return
 }
 
 func main() {
 
-	reader := bufio.NewReader(os.Stdin)
-
-	task := func() {
+	task := func(reader *bufio.Reader, writer io.Writer) {
 		defer func() {
 			if recovered := recover(); recovered != nil {
-				fmt.Println(recovered)
+				fmt.Fprintf(writer, "[Error] - %s\n", recovered)
 			}
 		}()
 
-		fmt.Print("db > ")
+		fmt.Fprintf(writer, "db > ")
+
 		text, err := readInput(reader)
 
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(writer, err)
 			os.Exit(int(ExitReadInputError))
 		}
 
 		if IsMetaCommand(text) {
-			if err := HandleMetaCommand(MetaCommand(text)); err != nil {
+			if err := ExecuteMetaCommand(MetaCommand(text)); err != nil {
 				panic(err)
 			} else {
 				return
 			}
 		}
+
+		stmt, err := NewStatementFromInput(text)
+
+		if err != nil {
+			panic(err)
+		}
+
+		if err = ExecuteStatement(*stmt); err != nil {
+			panic(err)
+		}
 	}
 
+	reader := bufio.NewReader(os.Stdin)
+
 	for {
-		task()
+		task(reader, os.Stdout)
 	}
 }
