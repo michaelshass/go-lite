@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -11,6 +12,20 @@ const (
 	linePrefix string = "db > "
 	delimiter  byte   = '\n'
 )
+
+func readInput(reader *bufio.Reader) []byte {
+	data, err := reader.ReadBytes(delimiter)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if !bytes.HasSuffix(data, []byte{'\n'}) {
+		return data
+	}
+
+	return data[:len(data)-1]
+}
 
 func main() {
 
@@ -23,31 +38,14 @@ func main() {
 
 		fmt.Fprintf(writer, "%s", linePrefix)
 
-		data, err := reader.ReadBytes(delimiter)
-
-		if err != nil {
-			panic(err)
-		}
+		data := readInput(reader)
 
 		if IsMetaCommand(data) {
-			if err = ExecuteMetaCommand(data); err != nil {
-				panic(err)
-			} else {
-				return
-			}
+			ExecuteMetaCommand(data)
 		}
 
-		stmt, err := NewStatementFromInput(data)
-
-		if err != nil {
-			panic(err)
-		}
-
-		if err = ExecuteStatement(*stmt); err != nil {
-			panic(err)
-		}
-
-		fmt.Printf("%s[info] - executed statement: %+v\n", linePrefix, *stmt)
+		stmt := NewStatementFromInput(data)
+		ExecuteStatement(*stmt)
 	}
 
 	reader := bufio.NewReader(os.Stdin)

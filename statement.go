@@ -10,14 +10,23 @@ type StatementType string
 
 const (
 	// InsertStatement type for inserting elements
-	InsertStatement = StatementType("insert")
+	InsertStatement = StatementType("insert ")
 	// SelectStatement type for selecting elements
-	SelectStatement = StatementType("select")
+	SelectStatement = StatementType("select ")
 )
 
 // Statement represents an instruction to the database.
 type Statement struct {
 	Type StatementType
+	data []byte
+}
+
+// Data returns a slice without the StatementType
+func (stmt *Statement) Data() []byte {
+	if bytes.HasPrefix(stmt.data, []byte(stmt.Type)) {
+		return stmt.data[len(stmt.Type):]
+	}
+	return stmt.data
 }
 
 // StatementCreateError indicating that an error occured
@@ -36,19 +45,18 @@ func (err *StatementCreateError) Error() string {
 }
 
 // NewStatementFromInput creates a statement from the given data.
-// If the StatementType is unknown, the function will return an error.
-func NewStatementFromInput(data []byte) (stmt *Statement, err error) {
+// If the StatementType is unknown, the function will panic.
+func NewStatementFromInput(data []byte) *Statement {
 	switch {
 	case bytes.HasPrefix(data, []byte(InsertStatement)):
-		stmt = &Statement{InsertStatement}
+		return &Statement{InsertStatement, data}
 
 	case bytes.HasPrefix(data, []byte(SelectStatement)):
-		stmt = &Statement{InsertStatement}
+		return &Statement{InsertStatement, data}
 
 	default:
-		err = NewStatementCreateError(string(data))
+		panic(NewStatementCreateError(string(data)))
 	}
-	return
 }
 
 // StatementExecutionError indicating that an error occured
@@ -67,15 +75,14 @@ func (err *StatementExecutionError) Error() string {
 }
 
 // ExecuteStatement tries to execute the given error.
-// Returns an error in case the statement could not be executed
-func ExecuteStatement(stmt Statement) (err error) {
+// Panics in case the statement could not be executed
+func ExecuteStatement(stmt Statement) {
 	switch stmt.Type {
 	case InsertStatement:
 		break
 	case SelectStatement:
 		break
 	default:
-		err = NewStatementExecutionError(stmt)
+		panic(NewStatementExecutionError(stmt))
 	}
-	return
 }

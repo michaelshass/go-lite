@@ -37,12 +37,11 @@ func IsMetaCommand(data []byte) bool {
 
 // ExecuteMetaCommand executes known commands.
 // Returns an error if command could not be handled.
-func ExecuteMetaCommand(data []byte) (err error) {
+func ExecuteMetaCommand(data []byte) {
 	switch {
 	case bytes.HasPrefix(data, []byte(MetaCommandExit)):
 		os.Exit(int(ExitSuccess))
 	default:
-		err = NewUnknownMetaCommandError(MetaCommand(data))
+		panic(NewUnknownMetaCommandError(MetaCommand(data)))
 	}
-	return err
 }
