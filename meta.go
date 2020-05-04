@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
-	"strings"
 )
 
 // MetaCommand type.
@@ -11,7 +11,7 @@ type MetaCommand string
 
 const (
 	// MetaCommandExit tells the program to stop.
-	MetaCommandExit MetaCommand = ".exit"
+	MetaCommandExit MetaCommand = MetaCommand(".exit")
 )
 
 // MetaCommandUnknownError type.
@@ -30,20 +30,19 @@ func NewUnknownMetaCommandError(command MetaCommand) *MetaCommandUnknownError {
 	}
 }
 
-// IsMetaCommand returns true if the given strings starts with a '.'
-func IsMetaCommand(text string) bool {
-	return strings.HasPrefix(text, ".")
+// IsMetaCommand returns true if the first element equals to '.'
+func IsMetaCommand(data []byte) bool {
+	return bytes.HasPrefix(data, []byte{'.'})
 }
 
 // ExecuteMetaCommand executes known commands.
 // Returns an error if command could not be handled.
-func ExecuteMetaCommand(command MetaCommand) (err error) {
-
-	switch command {
-	case MetaCommandExit:
+func ExecuteMetaCommand(data []byte) (err error) {
+	switch {
+	case bytes.HasPrefix(data, []byte(MetaCommandExit)):
 		os.Exit(int(ExitSuccess))
 	default:
-		err = NewUnknownMetaCommandError(command)
+		err = NewUnknownMetaCommandError(MetaCommand(data))
 	}
 	return err
 }

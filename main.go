@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 )
 
 const (
@@ -13,49 +12,32 @@ const (
 	delimiter  byte   = '\n'
 )
 
-func readInput(reader *bufio.Reader) (text string, err error) {
-
-	text, err = reader.ReadString(delimiter)
-
-	if err != nil {
-		return
-	}
-
-	// Clean string before evaluation
-	if index := strings.IndexByte(text, delimiter); index >= 0 {
-		text = text[:index]
-	}
-
-	return
-}
-
 func main() {
 
 	task := func(reader *bufio.Reader, writer io.Writer) {
 		defer func() {
 			if recovered := recover(); recovered != nil {
-				fmt.Fprintf(writer, "[Error] - %s\n", recovered)
+				fmt.Fprintf(writer, "[error] - %s\n", recovered)
 			}
 		}()
 
-		fmt.Fprintf(writer, "db > ")
+		fmt.Fprintf(writer, "%s", linePrefix)
 
-		text, err := readInput(reader)
+		data, err := reader.ReadBytes(delimiter)
 
 		if err != nil {
-			fmt.Fprintln(writer, err)
-			os.Exit(int(ExitReadInputError))
+			panic(err)
 		}
 
-		if IsMetaCommand(text) {
-			if err := ExecuteMetaCommand(MetaCommand(text)); err != nil {
+		if IsMetaCommand(data) {
+			if err = ExecuteMetaCommand(data); err != nil {
 				panic(err)
 			} else {
 				return
 			}
 		}
 
-		stmt, err := NewStatementFromInput(text)
+		stmt, err := NewStatementFromInput(data)
 
 		if err != nil {
 			panic(err)
@@ -64,6 +46,8 @@ func main() {
 		if err = ExecuteStatement(*stmt); err != nil {
 			panic(err)
 		}
+
+		fmt.Printf("%s[info] - executed statement: %+v\n", linePrefix, *stmt)
 	}
 
 	reader := bufio.NewReader(os.Stdin)

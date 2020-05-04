@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"strings"
 )
 
 // StatementType describing the type of a Statement.
@@ -35,18 +35,18 @@ func (err *StatementCreateError) Error() string {
 	return fmt.Sprintf("unable to create statement from string: '%s'", err.stmtString)
 }
 
-// NewStatementFromInput creates a statement from the given input string.
+// NewStatementFromInput creates a statement from the given data.
 // If the StatementType is unknown, the function will return an error.
-func NewStatementFromInput(text string) (stmt *Statement, err error) {
+func NewStatementFromInput(data []byte) (stmt *Statement, err error) {
 	switch {
-	case strings.HasPrefix(text, string(InsertStatement)):
+	case bytes.HasPrefix(data, []byte(InsertStatement)):
 		stmt = &Statement{InsertStatement}
 
-	case strings.HasPrefix(text, string(SelectStatement)):
+	case bytes.HasPrefix(data, []byte(SelectStatement)):
 		stmt = &Statement{InsertStatement}
 
 	default:
-		err = NewStatementCreateError(text)
+		err = NewStatementCreateError(string(data))
 	}
 	return
 }
