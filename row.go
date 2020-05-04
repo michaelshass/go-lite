@@ -18,15 +18,6 @@ type Row struct {
 	Mail     [mailSize]byte
 }
 
-// NewRow creates a row with empty attributes.
-func NewRow() *Row {
-	row := &Row{}
-	row.ID = [idSize]byte{}
-	row.Username = [usernameSize]byte{}
-	row.Mail = [mailSize]byte{}
-	return row
-}
-
 func serializeRow(src *Row) (dst [rowSize]byte) {
 	copy(dst[idOffset:], src.ID[:])
 	copy(dst[userNameoffset:], src.Username[:])
