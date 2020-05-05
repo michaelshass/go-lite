@@ -1,14 +1,14 @@
 package main
 
 const (
-	pageSize      = 4096 * 1000
+	pageSize      = 4096
 	rowsPerPage   = pageSize / rowSize
 	tableMaxPages = 100
 	tableMaxRows  = rowsPerPage * tableMaxPages
 )
 
-// Table holds data in pages each 4096kb in size.
-// Number of total pages in limited to const 'tableMaxPages'
+// Table holds data in pages 4096 in size.
+// Number of total pages is limited to const 'tableMaxPages'
 type Table struct {
 	numRows int
 	pages   [tableMaxPages][]byte
