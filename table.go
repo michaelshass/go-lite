@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 const (
 	pageSize      = 4096
 	rowsPerPage   = pageSize / rowSize
@@ -27,4 +29,18 @@ func (table *Table) rowSlot(rowIndex int) []byte {
 	byteOffset := rowOffset * rowSize
 
 	return page[byteOffset : byteOffset+rowSize]
+}
+
+// TableCapacityError indicates that the table is not able to store more data.
+type TableCapacityError struct {
+	capacity int
+}
+
+func (err *TableCapacityError) Error() string {
+	return fmt.Sprintf("Operation will exceed max capacity of %d", err.capacity)
+}
+
+// NewTableCapacityError creates a new error for exceeding the given capacity.
+func NewTableCapacityError(capacity int) *TableCapacityError {
+	return &TableCapacityError{capacity}
 }

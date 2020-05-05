@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 )
 
@@ -97,8 +96,9 @@ func ExecuteStatement(stmt *Statement, table *Table) {
 
 	switch stmt.Type {
 	case InsertStatement:
+
 		if table.numRows >= tableMaxRows {
-			panic(errors.New("Table is full"))
+			panic(NewTableCapacityError(tableMaxRows))
 		}
 
 		row := stmt.InsertRow()
