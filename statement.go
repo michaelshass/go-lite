@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 )
 
@@ -10,9 +11,9 @@ type StatementType string
 
 const (
 	// InsertStatement type for inserting elements
-	InsertStatement = StatementType("insert ")
+	InsertStatement = StatementType("insert")
 	// SelectStatement type for selecting elements
-	SelectStatement = StatementType("select ")
+	SelectStatement = StatementType("select")
 )
 
 // Statement represents an instruction to the database.
@@ -23,10 +24,26 @@ type Statement struct {
 
 // Data returns a slice without the StatementType
 func (stmt *Statement) Data() []byte {
-	if bytes.HasPrefix(stmt.data, []byte(stmt.Type)) {
-		return stmt.data[len(stmt.Type):]
+	prefix := fmt.Sprintf("%s ", stmt.Type)
+	if bytes.HasPrefix(stmt.data, []byte(prefix)) {
+		return stmt.data[len(prefix):]
 	}
 	return stmt.data
+}
+
+// InsertRow returns a row created from the user input data.
+// NOTE: Fix format for now (id, username, mail).
+func (stmt *Statement) InsertRow() *Row {
+	rowData := bytes.SplitAfter(
+		stmt.Data(),
+		[]byte{' '},
+	)
+
+	row := &Row{}
+	copy(row.ID[:], rowData[0][:])
+	copy(row.Username[:], rowData[1][:])
+	copy(row.Mail[:], rowData[2][:])
+	return row
 }
 
 // StatementCreateError indicating that an error occured
@@ -52,7 +69,7 @@ func NewStatementFromInput(data []byte) *Statement {
 		return &Statement{InsertStatement, data}
 
 	case bytes.HasPrefix(data, []byte(SelectStatement)):
-		return &Statement{InsertStatement, data}
+		return &Statement{SelectStatement, data}
 
 	default:
 		panic(NewStatementCreateError(string(data)))
@@ -76,13 +93,43 @@ func (err *StatementExecutionError) Error() string {
 
 // ExecuteStatement tries to execute the given error.
 // Panics in case the statement could not be executed
-func ExecuteStatement(stmt Statement) {
+func ExecuteStatement(stmt *Statement, table *Table) {
+
 	switch stmt.Type {
 	case InsertStatement:
-		break
+		if table.numRows >= tableMaxRows {
+			panic(errors.New("Table is full"))
+		}
+
+		row := stmt.InsertRow()
+		serializedData := serializeRow(row)
+		rowSlot := table.rowSlot(table.numRows)
+		copy(rowSlot, serializedData[:])
+		fmt.Printf(
+			"%sinserted row: (%s, %s, %s)\n",
+			linePrefix,
+			string(row.ID[:]),
+			string(row.Username[:]),
+			string(row.Mail[:]),
+		)
+		table.numRows++
+
 	case SelectStatement:
-		break
+		for i := 0; i < table.numRows; i++ {
+			rowData := [rowSize]byte{}
+			copy(rowData[:], table.rowSlot(i))
+			row := deserializeRow(rowData)
+			fmt.Printf(
+				"%srow #%d: (%s, %s, %s)\n",
+				linePrefix,
+				i,
+				string(row.ID[:]),
+				string(row.Username[:]),
+				string(row.Mail[:]),
+			)
+		}
+
 	default:
-		panic(NewStatementExecutionError(stmt))
+		panic(NewStatementExecutionError(*stmt))
 	}
 }

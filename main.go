@@ -20,14 +20,16 @@ func readInput(reader *bufio.Reader) []byte {
 		panic(err)
 	}
 
-	if !bytes.HasSuffix(data, []byte{'\n'}) {
-		return data
+	if bytes.HasSuffix(data, []byte{'\n'}) {
+		return data[:len(data)-1]
+
 	}
 
-	return data[:len(data)-1]
+	return data
 }
 
 func main() {
+	table := &Table{}
 
 	task := func(reader *bufio.Reader, writer io.Writer) {
 		defer func() {
@@ -45,7 +47,7 @@ func main() {
 		}
 
 		stmt := NewStatementFromInput(data)
-		ExecuteStatement(*stmt)
+		ExecuteStatement(stmt, table)
 	}
 
 	reader := bufio.NewReader(os.Stdin)
