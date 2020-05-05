@@ -29,9 +29,8 @@ func readInput(reader *bufio.Reader) []byte {
 }
 
 func main() {
-	table := &Table{}
 
-	task := func(reader *bufio.Reader, writer io.Writer) {
+	task := func(reader *bufio.Reader, writer io.Writer, table *Table) {
 		defer func() {
 			if recovered := recover(); recovered != nil {
 				fmt.Fprintf(writer, "[error] - %s\n", recovered)
@@ -51,8 +50,9 @@ func main() {
 	}
 
 	reader := bufio.NewReader(os.Stdin)
+	table := &Table{}
 
 	for {
-		task(reader, os.Stdout)
+		task(reader, os.Stdout, table)
 	}
 }

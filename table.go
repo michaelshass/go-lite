@@ -1,7 +1,7 @@
 package main
 
 const (
-	pageSize      = 1000 * 4096
+	pageSize      = 4096 * 1000
 	rowsPerPage   = pageSize / rowSize
 	tableMaxPages = 100
 	tableMaxRows  = rowsPerPage * tableMaxPages

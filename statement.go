@@ -34,7 +34,7 @@ func (stmt *Statement) Data() []byte {
 // InsertRow returns a row created from the user input data.
 // NOTE: Fix format for now (id, username, mail).
 func (stmt *Statement) InsertRow() *Row {
-	rowData := bytes.SplitAfter(
+	rowData := bytes.Split(
 		stmt.Data(),
 		[]byte{' '},
 	)
@@ -105,13 +105,13 @@ func ExecuteStatement(stmt *Statement, table *Table) {
 		serializedData := serializeRow(row)
 		rowSlot := table.rowSlot(table.numRows)
 		copy(rowSlot, serializedData[:])
-		fmt.Printf(
-			"%sinserted row: (%s, %s, %s)\n",
-			linePrefix,
-			string(row.ID[:]),
-			string(row.Username[:]),
-			string(row.Mail[:]),
-		)
+		// fmt.Printf(
+		// 	"%sinserted row: (%s, %s, %s)\n",
+		// 	linePrefix,
+		// 	string(row.ID[:]),
+		// 	string(row.Username[:]),
+		// 	string(row.Mail[:]),
+		// )
 		table.numRows++
 
 	case SelectStatement:
